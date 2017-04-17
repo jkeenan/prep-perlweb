@@ -7,8 +7,6 @@ use Data::Dump qw( dd pp );
 use Carp;
 use Cwd;
 
-#my/home/jkeenan/gitwork/perlweb/docs/dev/perl5/news
-
 =pod
 
     <li>
@@ -51,6 +49,9 @@ END_OF_ITEM
     $releases{$v} = $li;
 }
 close $IN or croak "Unable to close after reading";
+my $insertion_file = "$cwd/insert-into-index.html";
+open my $OUT, '>', $insertion_file or croak "Unable to open for writing";
 for my $r ( sort { $b cmp $a  } keys %releases ) {
-    say $releases{$r};
+    say $OUT $releases{$r};
 }
+close $OUT or croak "Unable to close after writing";
