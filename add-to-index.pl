@@ -6,6 +6,18 @@ use Data::Dumper;$Data::Dumper::Indent=1;
 use Data::Dump qw( dd pp );
 use Carp;
 use Cwd;
+use File::Copy;
+use Getopt::Long;
+
+my ($repodir);
+GetOptions(
+    "repo=s"        => \$repodir,
+);
+
+croak "Cannot locate top-level of checkout of 'perlweb'"
+    unless (-d $repodir);
+my $newsdir = "$repodir/docs/dev/perl5/news";
+croak "Could not locate '$newsdir'" unless (-d $newsdir);
 
 =pod
 
@@ -29,8 +41,13 @@ my %months = (
     '11'    => 'Nov',
     '12'    => 'Dec',
 );
-my $cwd = cwd();
-my $pvn = "$cwd/production-versions-needed.txt";
+my $thisdir = cwd();
+my $indir = "$thisdir/inputs";
+croak "Could not locate '$indir'" unless (-d $indir);
+my $outdir = "$thisdir/outputs";
+croak "Could not locate '$outdir'" unless (-d $outdir);
+
+my $pvn = "$thisdir/production-versions-needed.txt";
 my %releases;
 open my $IN, '<', $pvn or croak "Unable to open for reading";
 while (my $r = <$IN>) {
@@ -47,11 +64,26 @@ while (my $r = <$IN>) {
 
 END_OF_ITEM
     $releases{$v} = $li;
+    move_to_perlweb($v, $year);
 }
 close $IN or croak "Unable to close after reading";
-my $insertion_file = "$cwd/insert-into-index.html";
+my $insertion_file = "$thisdir/insert-into-index.html";
 open my $OUT, '>', $insertion_file or croak "Unable to open for writing";
 for my $r ( sort { $b cmp $a  } keys %releases ) {
     say $OUT $releases{$r};
 }
 close $OUT or croak "Unable to close after writing";
+# Then manually insert insert-into-index.html into
+# /home/jkeenan/gitwork/perlweb/docs/dev/perl5/news/index.html.
+
+
+sub move_to_perlweb {
+    my ($v, $year) = @_;
+    say STDERR join ('|' => $v, $year);
+    my $html = "$outdir/perl-${v}.html";
+    croak "Could not locate $html prior to copying" unless (-f $html);
+    my $yeardir = "$newsdir/$year";
+    croak "Could not locate $yeardir prior to copying" unless (-d $yeardir);
+    copy($html => $yeardir)
+        or croak "Unable to copy $html into $yeardir";
+}
