@@ -146,7 +146,7 @@ for my $p (@paragraphs_raw) {
     }
     else {
         my $unwrapped = $p =~ s/\n/ /gr;
-        if ($unwrapped =~ m/^\s*(https:\/\/www\.metacpan\.org.*)$/) {
+        if ($unwrapped =~ m/^\s*(https:\/\/(?:www\.)?metacpan\.org.*)$/) {
             $para{url_raw} = $1;
         }
         else {
@@ -177,7 +177,6 @@ later process.
 my $output = "$outdir/perl-${version}.html";
 open my $OUT, '>', $output or croak "Unable to open '$output' for writing";
 say $OUT '[% page.title = "Perl ' . $version . ' Release Announcement" %]';
-#say $OUT '<meta charset="utf-8">';
 for my $p (@paragraphs_refined) {
     say $OUT '';
     if (exists $p->{url_raw}) {
